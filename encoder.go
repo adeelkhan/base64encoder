@@ -16,14 +16,14 @@ const bitChunk = 6
 const decodeBitChunk = 8
 
 func main() {
-	var toEncode = "encodethi"
-	encodedString := encodeString(toEncode)
+	var toEncode = "alpha"
+	encodedString := EncodeString(toEncode)
 	fmt.Println(toEncode, encodedString)
 
-	var toDecode, _ = decodeString(encodedString)
+	var toDecode, _ = DecodeString("aGE=")
 	fmt.Println(toDecode)
 }
-func decodeString(toDecode string) (string, error) {
+func DecodeString(toDecode string) (string, error) {
 	var decodeString = make([]string,0)
 	var width = 4
 	var val []string
@@ -33,19 +33,31 @@ func decodeString(toDecode string) (string, error) {
 	for i:=0; i< len(toDecode); i+=width {
 		if string(toDecode[i+width-1]) != "=" {
 			end = i + width
+			val, err =  decodeStringChunk(toDecode[i:end])
+				if err != nil {
+					return "",err
+				}
+				decodeString = append(decodeString, val...)
 		} else {
 			if string(toDecode[i+width-1]) == "=" &&
 			string(toDecode[i+width-2]) == "=" {
 				end = i + 2
+				val, err =  decodeStringChunk(toDecode[i:end])
+				if err != nil {
+					return "",err
+				}
+				// append first one bytes
+				decodeString = append(decodeString, val[:1]...)
 			} else {
-				end = width - 1
+				end = i + width - 1
+				val, err =  decodeStringChunk(toDecode[i:end])
+				if err != nil {
+					return "",err
+				}
+				// append first two bytes
+				decodeString = append(decodeString, val[:2]...)
 			}
 		}
-		val, err =  decodeStringChunk(toDecode[i:end])
-		if err != nil {
-			return "",err
-		}
-		decodeString = append(decodeString, val...)
 	}
 	return string(strings.Join(decodeString,"")), nil
 }
@@ -74,16 +86,16 @@ func processDecode(chunkBytes []string) []string{
 	decodeString := make([]string,0)
 	for i:=0; i<len(chunkBytes); i+=decodeBitChunk {
 		chunkBits := string(strings.Join(chunkBytes[i:i+decodeBitChunk], ""))
-		if d, err := strconv.ParseInt(chunkBits, 2, 16); err != nil {
+		if d, err := strconv.ParseInt(chunkBits, 2, 8); err != nil {
 			fmt.Println(err)
 		} else {
-			decodeString = append(decodeString, string(d))
+			decodeString = append(decodeString, string(byte(d)))
 		}
 	}
 	return decodeString
 }
 
-func encodeString(toEncode string) string {
+func EncodeString(toEncode string) string {
 	// fetch chunk of 3 characters and encode
 	var outputString []string = make([]string, 1)
 	
