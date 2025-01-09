@@ -51,26 +51,14 @@ func Base64Decode(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(bytes))
 }
 
-func test(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "test")
-}
-
 func main() {
 	// server setup
 	r := mux.NewRouter()
 
-	r.HandleFunc("/test", test)
 	r.HandleFunc("/encode", Base64Encode)
 	r.HandleFunc("/decode", Base64Decode)
 
 	serverAddress := "localhost:8000"
-
-	// originsOk := r.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
-
-	// credentials := handlers.AllowCredentials()
-	// headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Origin"})
-	// originsOk := handlers.AllowedOrigins([]string{"*"})
-	// methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -78,14 +66,12 @@ func main() {
 	})
 
 	handler := c.Handler(r)
-
 	srv := &http.Server{
 		Handler:      handler,
 		Addr:         serverAddress,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
 	fmt.Printf("Server starting at...%s", serverAddress)
 	log.Fatal(srv.ListenAndServe(), handler)
 }
